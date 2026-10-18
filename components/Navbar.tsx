@@ -10,11 +10,11 @@ export default function Navbar() {
           Home
         </a>
 
-        <a href="#movies" className="transition hover:text-red-500">
+        <a href="/movies" className="transition hover:text-red-500">
           Movies
         </a>
 
-        <a href="#watchlist" className="transition hover:text-red-500">
+        <a href="/watchlist" className="transition hover:text-red-500">
           Watchlist
         </a>
       </div>
