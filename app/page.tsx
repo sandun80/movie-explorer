@@ -179,7 +179,8 @@ async function handleSearch(query: string) {
         id="watchlist"
         className="border-t border-white/10 px-6 py-8 text-center text-sm text-zinc-500"
       >
-        MovieExplorer — Discover your next favourite movie.
+         © 2026 MovieExplorer. All rights reserved.
+
       </footer>
     </main>
   );
