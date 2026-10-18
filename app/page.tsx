@@ -66,6 +66,46 @@ useEffect(() => {
 }, []);
 
 
+
+async function handleSearch(query: string) {
+  try {
+    setLoading(true);
+    setError("");
+
+    const response = await fetch(
+      `/api/movies/search?query=${encodeURIComponent(query)}`
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to search movies");
+    }
+
+    const data: TMDBResponse = await response.json();
+
+    const formattedMovies: Movie[] = data.results.map((movie) => ({
+      id: movie.id,
+      title: movie.title,
+      year: movie.release_date
+        ? Number(movie.release_date.slice(0, 4))
+        : 0,
+      rating: movie.vote_average,
+      poster: movie.poster_path
+        ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+        : "",
+    }));
+
+    setMovies(formattedMovies);
+  } catch (error) {
+  console.error("Movie search error:", error);
+  setError("Could not search movies. Please try again.");
+  
+  } finally {
+    setLoading(false);
+  }
+}
+
+
+
   return (
     <main className="min-h-screen bg-zinc-950 text-white">
       {/* Navbar */}
@@ -84,7 +124,7 @@ useEffect(() => {
           </h2>
 
           <div className="mt-8">
-            <SearchBar />
+            <SearchBar onSearch={handleSearch} />
           </div>
 
           <p className="mt-6 max-w-xl leading-7 text-zinc-400">
