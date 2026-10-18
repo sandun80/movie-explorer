@@ -21,8 +21,12 @@ export async function GET(request: Request) {
       );
     }
 
+    const pageParam = Number(searchParams.get("page"));
+    const page =
+      Number.isInteger(pageParam) && pageParam >= 1 ? Math.min(pageParam, 500) : 1;
+
     const response = await fetch(
-      `https://api.themoviedb.org/3/search/movie?query=${encodeURIComponent(query)}&language=en-US&page=1`,
+      `https://api.themoviedb.org/3/search/movie?query=${encodeURIComponent(query)}&language=en-US&page=${page}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,

@@ -24,12 +24,56 @@ type TMDBMovie = {
 
 type TMDBResponse = {
   results: TMDBMovie[];
+  total_pages: number;
 };
 
 export default function MoviesPage() {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [activeQuery, setActiveQuery] = useState("");
+  const [loadingMore, setLoadingMore] = useState(false);
+
+  async function fetchPage(query: string, pageNumber: number) {
+    const url = query
+      ? `/api/search?query=${encodeURIComponent(query)}&page=${pageNumber}`
+      : `/api/movies?page=${pageNumber}`;
+
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error("Failed to load movies");
+    }
+
+    const data: TMDBResponse = await response.json();
+    return {
+      movies: formatMovies(data.results),
+      totalPages: Math.min(data.total_pages ?? 1, 500),
+    };
+  }
+
+  async function loadMore() {
+    try {
+      setLoadingMore(true);
+      const next = page + 1;
+      const result = await fetchPage(activeQuery, next);
+
+      // Pages can overlap, so skip movies already shown
+      setMovies((prev) => {
+        const seen = new Set(prev.map((m) => m.id));
+        return [...prev, ...result.movies.filter((m) => !seen.has(m.id))];
+      });
+      setPage(next);
+      setTotalPages(result.totalPages);
+    } catch (error) {
+      console.error("Load more error:", error);
+      setError("Could not load more movies. Please try again.");
+    } finally {
+      setLoadingMore(false);
+    }
+  }
 
   function formatMovies(results: TMDBMovie[]): Movie[] {
     return results.map((movie) => ({
@@ -50,14 +94,11 @@ export default function MoviesPage() {
       setLoading(true);
       setError("");
 
-      const response = await fetch("/api/movies");
-
-      if (!response.ok) {
-        throw new Error("Failed to load popular movies");
-      }
-
-      const data: TMDBResponse = await response.json();
-      setMovies(formatMovies(data.results));
+      const result = await fetchPage("", 1);
+      setMovies(result.movies);
+      setActiveQuery("");
+      setPage(1);
+      setTotalPages(result.totalPages);
     } catch (error) {
       console.error("Movies page error:", error);
       setError("Could not load movies. Please try again.");
@@ -71,16 +112,11 @@ export default function MoviesPage() {
       setLoading(true);
       setError("");
 
-      const response = await fetch(
-        `/api/movies/search?query=${encodeURIComponent(query)}`
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to search movies");
-      }
-
-      const data: TMDBResponse = await response.json();
-      setMovies(formatMovies(data.results));
+      const result = await fetchPage(query, 1);
+      setMovies(result.movies);
+      setActiveQuery(query);
+      setPage(1);
+      setTotalPages(result.totalPages);
     } catch (error) {
       console.error("Movie search error:", error);
       setError("Could not search movies. Please try again.");
@@ -156,6 +192,18 @@ export default function MoviesPage() {
               </div>
 
               <MovieGrid movies={movies} />
+
+              {page < totalPages && (
+                <div className="mt-8 text-center">
+                  <button
+                    onClick={loadMore}
+                    disabled={loadingMore}
+                    className="rounded-lg bg-red-600 px-6 py-3 font-semibold transition hover:bg-red-700 disabled:opacity-60"
+                  >
+                    {loadingMore ? "Loading..." : "Load more"}
+                  </button>
+                </div>
+              )}
 
               <button
                 onClick={loadPopularMovies}
