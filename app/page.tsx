@@ -73,7 +73,7 @@ async function handleSearch(query: string) {
     setError("");
 
     const response = await fetch(
-      `/api/movies/search?query=${encodeURIComponent(query)}`
+      `/api/search?query=${encodeURIComponent(query)}`
     );
 
     if (!response.ok) {
