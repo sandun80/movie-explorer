@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
+import { connection } from "next/server";
 
 export async function GET(request: Request) {
+    await connection();
+    
     try{
         const pageParam = Number(new URL(request.url).searchParams.get("page"));
         const page = Number.isInteger(pageParam) && pageParam >= 1 ? Math.min(pageParam, 500) : 1;

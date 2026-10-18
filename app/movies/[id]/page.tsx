@@ -1,3 +1,5 @@
+
+import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import Navbar from "@/components/Navbar";
@@ -20,11 +22,29 @@ type MovieDetails = {
   backdrop_path: string | null;
 };
 
-export default async function MovieDetailsPage({
-  params,
-}: {
+type PageProps = {
   params: Promise<{ id: string }>;
-}) {
+};
+
+export default function MovieDetailsPage({ params }: PageProps) {
+  return (
+    <main className="min-h-screen bg-zinc-950 text-white">
+      <Navbar />
+
+      <Suspense
+        fallback={
+          <div className="px-6 py-20 text-center text-zinc-400">
+            Loading movie details...
+          </div>
+        }
+      >
+        <MovieDetailsContent params={params} />
+      </Suspense>
+    </main>
+  );
+}
+
+async function MovieDetailsContent({ params }: PageProps) {
   const { id } = await params;
 
   if (!/^\d+$/.test(id)) {
@@ -67,94 +87,90 @@ export default async function MovieDetailsPage({
     : "Unavailable";
 
   return (
-    <main className="min-h-screen bg-zinc-950 text-white">
-      <Navbar />
+    <section
+      className="relative bg-cover bg-center"
+      style={{
+        backgroundImage: movie.backdrop_path
+          ? `linear-gradient(to right, #09090b 20%, rgba(9,9,11,0.75)), url(https://image.tmdb.org/t/p/w1280${movie.backdrop_path})`
+          : undefined,
+      }}
+    >
+      <div className="mx-auto max-w-7xl px-6 py-12 md:px-12 md:py-20">
+        <Link
+          href="/"
+          className="mb-8 inline-block text-sm text-zinc-300 transition hover:text-red-400"
+        >
+          ← Back to movies
+        </Link>
 
-      <section
-        className="relative bg-cover bg-center"
-        style={{
-          backgroundImage: movie.backdrop_path
-            ? `linear-gradient(to right, #09090b 20%, rgba(9,9,11,0.75)), url(https://image.tmdb.org/t/p/w1280${movie.backdrop_path})`
-            : undefined,
-        }}
-      >
-        <div className="mx-auto max-w-7xl px-6 py-12 md:px-12 md:py-20">
-          <Link
-            href="/"
-            className="mb-8 inline-block text-sm text-zinc-300 transition hover:text-red-400"
-          >
-            ← Back to movies
-          </Link>
-
-          <div className="grid gap-8 md:grid-cols-[280px_1fr] md:gap-12">
-            <div>
-              {movie.poster_path ? (
-                <img
-                  src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
-                  alt={`${movie.title} poster`}
-                  className="w-full max-w-xs rounded-xl shadow-2xl"
-                />
-              ) : (
-                <div className="flex aspect-[2/3] max-w-xs items-center justify-center rounded-xl bg-zinc-800 text-zinc-400">
-                  No poster available
-                </div>
-              )}
-            </div>
-
-            <div className="self-center">
-              <p className="mb-3 font-semibold uppercase tracking-widest text-red-500">
-                Movie Details
-              </p>
-
-              <h1 className="text-4xl font-bold leading-tight md:text-6xl">
-                {movie.title}
-              </h1>
-
-              <div className="mt-5 flex flex-wrap gap-4 text-sm text-zinc-300">
-                <span>{year}</span>
-                <span className="text-yellow-400">
-                  ★ {movie.vote_average.toFixed(1)} / 10
-                </span>
-                <span>{runtime}</span>
+        <div className="grid gap-8 md:grid-cols-[280px_1fr] md:gap-12">
+          <div>
+            {movie.poster_path ? (
+              <img
+                src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
+                alt={`${movie.title} poster`}
+                className="w-full max-w-xs rounded-xl shadow-2xl"
+              />
+            ) : (
+              <div className="flex aspect-[2/3] max-w-xs items-center justify-center rounded-xl bg-zinc-800 text-zinc-400">
+                No poster available
               </div>
+            )}
+          </div>
 
-              {movie.genres.length > 0 && (
-                <div className="mt-5 flex flex-wrap gap-2">
-                  {movie.genres.map((genre) => (
-                    <span
-                      key={genre.id}
-                      className="rounded-full border border-white/20 px-3 py-1 text-sm text-zinc-200"
-                    >
-                      {genre.name}
-                    </span>
-                  ))}
-                </div>
-              )}
+          <div className="self-center">
+            <p className="mb-3 font-semibold uppercase tracking-widest text-red-500">
+              Movie Details
+            </p>
 
-              <h2 className="mt-8 text-2xl font-semibold">Overview</h2>
+            <h1 className="text-4xl font-bold leading-tight md:text-6xl">
+              {movie.title}
+            </h1>
 
-              <p className="mt-3 max-w-3xl leading-8 text-zinc-300">
-                {movie.overview || "No overview is available for this movie."}
-              </p>
-
-              <WatchlistButton
-                movie={{
-                    id: movie.id,
-                    title: movie.title,
-                    year: movie.release_date
-                    ? Number(movie.release_date.slice(0, 4))
-                    : 0,
-                    rating: movie.vote_average,
-                    poster: movie.poster_path
-                    ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
-                    : "",
-                }}
-                />
-
+            <div className="mt-5 flex flex-wrap gap-4 text-sm text-zinc-300">
+              <span>{year}</span>
+              <span className="text-yellow-400">
+                ★ {movie.vote_average.toFixed(1)} / 10
+              </span>
+              <span>{runtime}</span>
             </div>
+
+            {movie.genres.length > 0 && (
+              <div className="mt-5 flex flex-wrap gap-2">
+                {movie.genres.map((genre) => (
+                  <span
+                    key={genre.id}
+                    className="rounded-full border border-white/20 px-3 py-1 text-sm text-zinc-200"
+                  >
+                    {genre.name}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            <h2 className="mt-8 text-2xl font-semibold">Overview</h2>
+
+            <p className="mt-3 max-w-3xl leading-8 text-zinc-300">
+              {movie.overview ||
+                "No overview is available for this movie."}
+            </p>
+
+            <WatchlistButton
+              movie={{
+                id: movie.id,
+                title: movie.title,
+                year: movie.release_date
+                  ? Number(movie.release_date.slice(0, 4))
+                  : 0,
+                rating: movie.vote_average,
+                poster: movie.poster_path
+                  ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+                  : "",
+              }}
+            />
           </div>
         </div>
-      </section>
-    </main>
+      </div>
+    </section>
   );
 }
